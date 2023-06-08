@@ -26,4 +26,7 @@ jobs:
         run: pip install .
 
       - name: Run Python script
-        run: python path/to/your_script.py
+        env:
+            TITO_KEY: ${{ secrets.TITO_KEY }}
+            SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: tito-to-slack ${{ vars.ACCOUNT }} ${{ vars.EVENT }}
