@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+
+[tool.setuptools_scm]
+write_to = "tito_slack/_version.py"
+
+[project]
+name = "tito-to-slack"
+version = "0.0.1"
+authors = [
+  { name="Alex Leith", email="alexgleith@gmail.com" },
+]
+description = "A thing to post to Slack from Tito"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "click",
+  "requests"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/foss4g-oceania/tito-slack-reporter"
+"Bug Tracker" = "https://github.com/foss4g-oceania/tito-slack-reporter/issues"
+
+[project.scripts]
+    tito-to-slack = "tito_slack.tito_slack:cli"

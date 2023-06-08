@@ -1,0 +1,28 @@
+# A github action to run a Python script
+# that sends a message to a Slack channel daily at 9 am AEST
+
+name: Tito to Slack
+
+on:
+  schedule:
+    # This should be 9 am AEDT
+    - cron: "0 10 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: pip install .
+
+      - name: Run Python script
+        run: python path/to/your_script.py
