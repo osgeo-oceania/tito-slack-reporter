@@ -8,7 +8,7 @@ import click
 import requests
 
 REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
-EVENT_DATE = datetime.datetime(2021, 10, 16)
+EVENT_DATE = datetime.datetime(2023, 10, 16)
 
 
 def get_tito_registrations(tito_key: str, account: str, event: str) -> dict:
