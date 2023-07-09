@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import datetime
-import logging
 import os
 from collections import Counter
 
@@ -9,16 +8,7 @@ import click
 import requests
 
 REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
-
-
-def configure_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
-        handlers=[logging.FileHandler("tito_slack.log"), logging.StreamHandler()],
-    )
-    # Return a basic logger
-    return logging.getLogger(__name__)
+EVENT_DATE = datetime.datetime(2021, 10, 16)
 
 
 def get_tito_registrations(tito_key: str, account: str, event: str) -> dict:
@@ -53,9 +43,13 @@ def post_to_slack(webhook: str, registrations: dict) -> None:
     """
     Post a message to Slack
     """
+    today = datetime.datetime.now()
+    days_to_go = (EVENT_DATE - today).days
+
     message = (
-        f"It's {datetime.datetime.now().strftime('%B %-d')} and "
-        "here's the latest registrations:\n"
+        f"It's {today.strftime('%B %-d')}, "
+        f"there are {days_to_go} days until the conference and "
+        "here's the latest registration numbers:\n"
     )
     message += "\n".join(
         [
