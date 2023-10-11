@@ -11,30 +11,36 @@ REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
 EVENT_DATE = datetime.datetime(2023, 10, 16)
 
 
-def get_tito_registrations(tito_key: str, account: str, event: str) -> dict:
+def get_tito_tickets(tito_key: str, account: str, event: str) -> dict:
     """
-    Get a list of registrations from Tito
+    Get a list of tickets from Tito
     """
     url = REGISTRATIONS_URL.format(account=account, event=event)
 
     headers = {"Authorization": f"Token token={tito_key}"}
 
-    response = requests.get(url, headers=headers)
+    next_page = 1
+    while next_page is not None:
+        parameters = {"page": next_page}
+        response = requests.get(url, headers=headers, params=parameters)
 
-    response.raise_for_status()
+        response.raise_for_status()
+        registrations = response.json()
+        next_page = registrations["meta"]["next_page"]
 
-    return response.json()
+        for registration in registrations["registrations"]:
+            for ticket in registration["quantities"].values():
+                yield ticket
 
 
-def summarise_registrations(registrations: dict) -> dict:
+def summarise_tickets(tickets: dict) -> dict:
     """
     Take a list of registrations and summarise them by ticket type
     """
     summary = Counter()
 
-    for registration in registrations:
-        for ticket in registration["quantities"].values():
-            summary.update({ticket["release"]: int(ticket["quantity"])})
+    for ticket in tickets:
+        summary.update({ticket["release"]: int(ticket["quantity"])})
 
     return summary
 
@@ -89,10 +95,14 @@ def cli(account, event):
     if SLACK_WEBHOOK is None:
         raise ValueError("SLACK_WEBHOOK not set")
 
-    registrations = get_tito_registrations(TITO_KEY, account, event)
+    tickets = get_tito_tickets(TITO_KEY, account, event)
 
-    if registrations is None:
-        raise ValueError("No registrations returned")
+    if tickets is None:
+        raise ValueError("No tickets returned")
 
-    summarised = summarise_registrations(registrations["registrations"])
+    summarised = summarise_tickets(tickets)
     post_to_slack(SLACK_WEBHOOK, summarised)
+
+
+if __name__ == "__main__":
+    cli()
