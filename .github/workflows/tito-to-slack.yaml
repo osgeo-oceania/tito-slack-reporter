@@ -4,9 +4,9 @@
 name: Tito to Slack
 
 on:
-  schedule:
-    # This should be 9 am AEST
-    - cron: "0 23 * * *"
+  # schedule:
+  #  # This should be 9 am AEST
+  #  - cron: "0 23 * * *"
   workflow_dispatch:
 
 jobs:
