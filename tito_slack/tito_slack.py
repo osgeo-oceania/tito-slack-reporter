@@ -11,7 +11,9 @@ import requests
 REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
 
 
-def get_tito_tickets(tito_key: str, account: str, event: str) -> Generator[dict]:
+def get_tito_tickets(
+    tito_key: str, account: str, event: str
+) -> Generator[dict, dict, dict]:
     """
     Get a list of tickets from Tito
     """
