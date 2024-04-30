@@ -98,7 +98,7 @@ def cli(account, event, event_date):
         raise ValueError("Environment variable SLACK_WEBHOOK not set")
 
     try:
-        event_date = datetime.datetime.strptime(event_date, "%Y-%m-%d")
+        event_date = datetime.strptime(event_date, "%Y-%m-%d")
     except ValueError:
         raise ValueError("EVENT_DATE must be in the format YYYY-MM-DD")
 
