@@ -4,6 +4,7 @@ import os
 from collections import Counter
 from datetime import datetime
 from typing import Generator
+from zoneinfo import ZoneInfo
 
 import click
 import requests
@@ -47,11 +48,19 @@ def summarise_tickets(tickets: dict) -> dict:
     return summary
 
 
-def post_to_slack(webhook: str, registrations: dict, event_date: datetime) -> None:
+def post_to_slack(
+    webhook: str, registrations: dict, event_date: datetime, timezone: str
+) -> None:
     """
     Post a message to Slack
+
+    Parameters:
+    webhook (str): The Slack webhook URL
+    registrations (dict): A dictionary of ticket types and quantities
+    event_date (datetime): The date of the event
+    timezone (str): The timezone of the event (like "Australia/Hobart")
     """
-    today = datetime.now()
+    today = datetime.now(tz=ZoneInfo(timezone))
     days_to_go = (event_date - today).days
 
     message = (
@@ -97,8 +106,11 @@ def cli(account, event, event_date):
     if slack_webhook is None:
         raise ValueError("Environment variable SLACK_WEBHOOK not set")
 
+    timezone = os.environ.get("TIMEZONE", "Australia/Hobart")
+
     try:
-        event_date = datetime.strptime(event_date, "%Y-%m-%d")
+        year, month, day = event_date.split("-")
+        event_date = datetime(year, month, day, tzinfo=ZoneInfo(timezone))
     except ValueError:
         raise ValueError("EVENT_DATE must be in the format YYYY-MM-DD")
 
@@ -108,7 +120,7 @@ def cli(account, event, event_date):
         raise ValueError("No tickets returned")
 
     summarised = summarise_tickets(tickets)
-    post_to_slack(slack_webhook, summarised, event_date)
+    post_to_slack(slack_webhook, summarised, event_date, timezone)
 
 
 if __name__ == "__main__":
