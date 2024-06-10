@@ -109,7 +109,7 @@ def cli(account, event, event_date):
     timezone = os.environ.get("TIMEZONE", "Australia/Hobart")
 
     try:
-        year, month, day = event_date.split("-")
+        year, month, day = [int(x) for x in event_date.split("-")]
         event_date = datetime(year, month, day, tzinfo=ZoneInfo(timezone))
     except ValueError:
         raise ValueError("EVENT_DATE must be in the format YYYY-MM-DD")
