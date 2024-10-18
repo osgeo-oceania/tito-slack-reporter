@@ -29,4 +29,4 @@ jobs:
         env:
             TITO_KEY: ${{ secrets.TITO_KEY }}
             SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: tito-to-slack ${{ vars.ACCOUNT }} ${{ vars.EVENT }} ${{ vars.EVENT_DATE }}
+        run: tito-to-slack --summary-type=activities ${{ vars.ACCOUNT }} ${{ vars.EVENT }} ${{ vars.EVENT_DATE }}

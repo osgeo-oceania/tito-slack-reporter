@@ -10,6 +10,7 @@ import click
 import requests
 
 REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
+ACTIVITIES_URL = "https://api.tito.io/v3/{account}/{event}/activities"
 
 
 def get_tito_tickets(
@@ -48,15 +49,36 @@ def summarise_tickets(tickets: dict) -> dict:
     return summary
 
 
+def get_tito_activities(
+    tito_key: str, account: str, event: str
+) -> Generator[dict, dict, dict]:
+    """
+    Get a list of activities from Tito in a summarised form
+    """
+    url = ACTIVITIES_URL.format(account=account, event=event)
+
+    headers = {"Authorization": f"Token token={tito_key}"}
+
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    activities = response.json()
+
+    summary = {}
+    for activity in activities["activities"]:
+        summary[activity["name"]] = activity["allocation_count"]
+
+    return summary
+
+
 def post_to_slack(
-    webhook: str, registrations: dict, event_date: datetime, timezone: str
+    webhook: str, summary: dict, event_date: datetime, timezone: str
 ) -> None:
     """
     Post a message to Slack
 
     Parameters:
     webhook (str): The Slack webhook URL
-    registrations (dict): A dictionary of ticket types and quantities
+    summary (dict): A dictionary of ticket types and quantities
     event_date (datetime): The date of the event
     timezone (str): The timezone of the event (like "Australia/Hobart")
     """
@@ -71,7 +93,7 @@ def post_to_slack(
     message += "\n".join(
         [
             f"\t• {ticket_type}: {quantity}"
-            for ticket_type, quantity in registrations.items()
+            for ticket_type, quantity in summary.items()
         ]
     )
     payload = {
@@ -96,7 +118,8 @@ def post_to_slack(
 @click.argument("account", type=str)
 @click.argument("event", type=str)
 @click.argument("event-date", type=str)
-def cli(account, event, event_date):
+@click.option("summary-type", type=str, default="registrations")
+def cli(account, event, event_date, summary_type):
     TITO_KEY = os.environ.get("TITO_KEY")
 
     if TITO_KEY is None:
@@ -114,13 +137,23 @@ def cli(account, event, event_date):
     except ValueError:
         raise ValueError("EVENT_DATE must be in the format YYYY-MM-DD")
 
-    tickets = get_tito_tickets(TITO_KEY, account, event)
+    if summary_type not in ["registrations", "activities"]:
+        raise ValueError("Invalid summary type")
+    
+    if summary_type == "registrations":
+        regos = get_tito_tickets(TITO_KEY, account, event)
 
-    if tickets is None:
-        raise ValueError("No tickets returned")
+        if regos is None:
+            raise ValueError("No tickets returned")
 
-    summarised = summarise_tickets(tickets)
-    post_to_slack(slack_webhook, summarised, event_date, timezone)
+        summary = summarise_tickets(regos)
+    elif summary_type == "activities":
+        summary = get_tito_activities(TITO_KEY, account, event)
+
+        if summary is None:
+            raise ValueError("No activities returned")
+
+    post_to_slack(slack_webhook, summary, event_date, timezone)
 
 
 if __name__ == "__main__":
