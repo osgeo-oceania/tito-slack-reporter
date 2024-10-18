@@ -118,7 +118,7 @@ def post_to_slack(
 @click.argument("account", type=str)
 @click.argument("event", type=str)
 @click.argument("event-date", type=str)
-@click.option("summary-type", type=str, default="registrations")
+@click.option("--summary-type", type=str, default="registrations")
 def cli(account, event, event_date, summary_type):
     TITO_KEY = os.environ.get("TITO_KEY")
 
