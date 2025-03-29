@@ -4,9 +4,9 @@
 name: Tito to Slack
 
 on:
-  # schedule:
-  #  # This should be 9 am AEST, monday, wednesday and friday
-  #  - cron: "0 23 * * 0,2,4"
+  schedule:
+  #  # This should be 9 am AEST, monday. Change to 0,2,4 for mon, wed and fri
+    - cron: "0 23 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,5 @@ jobs:
         env:
             TITO_KEY: ${{ secrets.TITO_KEY }}
             SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: tito-to-slack --summary-type=activities ${{ vars.ACCOUNT }} ${{ vars.EVENT }} ${{ vars.EVENT_DATE }}
+        # Add the flag --summary-type=activities later to make it simpler
+        run: tito-to-slack ${{ vars.ACCOUNT }} ${{ vars.EVENT }} ${{ vars.EVENT_DATE }}
