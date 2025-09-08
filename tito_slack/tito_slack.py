@@ -12,6 +12,18 @@ import requests
 REGISTRATIONS_URL = "https://api.tito.io/v3/{account}/{event}/registrations"
 ACTIVITIES_URL = "https://api.tito.io/v3/{account}/{event}/activities"
 
+NON_WORKSHOP_ACTIVITIES = (
+    "Conference Day 1",
+    "Conference Day 2",
+    "Conference Day 3",
+    "Conference Dinner",
+    "Geochicas",
+    "Icebreaker",
+    "T-Shirt",
+    "Women in Geospatial Breakfast",
+    "B2B",
+)
+
 
 def get_tito_tickets(
     tito_key: str, account: str, event: str
@@ -63,15 +75,20 @@ def get_tito_activities(
     response.raise_for_status()
     activities = response.json()
 
-    summary = {}
+    summary = {
+        "Workshops": 0,
+    }
     for activity in activities["activities"]:
-        summary[activity["name"]] = activity["allocation_count"]
+        if activity["name"] in NON_WORKSHOP_ACTIVITIES:
+            summary[activity["name"]] = activity["allocation_count"]
+        else:
+            summary["Workshops"] += activity["allocation_count"]
 
     return summary
 
 
 def post_to_slack(
-    webhook: str, summary: dict, event_date: datetime, timezone: str
+    webhook: str, summary: dict, event_date: datetime, timezone: str, dry_run: bool=False
 ) -> None:
     """
     Post a message to Slack
@@ -108,9 +125,16 @@ def post_to_slack(
         ]
     }
 
-    response = requests.post(webhook, json=payload)
-
-    response.raise_for_status()
+    if dry_run:
+        print("Dry run, not posting to Slack")
+        print(message)
+    else:
+        print("Posting to Slack")
+        print(message)
+        response = requests.post(webhook, json=payload)
+        if response.status_code != 200:
+            print(f"Error posting to Slack: {response.text}")
+        response.raise_for_status()
 
 
 # A CLI function that takes in a tito organisation and event and posts to Slack
@@ -119,7 +143,8 @@ def post_to_slack(
 @click.argument("event", type=str)
 @click.argument("event-date", type=str)
 @click.option("--summary-type", type=str, default="registrations")
-def cli(account, event, event_date, summary_type):
+@click.option("--dry-run", is_flag=True, default=False)
+def cli(account, event, event_date, summary_type, dry_run):
     TITO_KEY = os.environ.get("TITO_KEY")
 
     if TITO_KEY is None:
@@ -153,7 +178,8 @@ def cli(account, event, event_date, summary_type):
         if summary is None:
             raise ValueError("No activities returned")
 
-    post_to_slack(slack_webhook, summary, event_date, timezone)
+
+    post_to_slack(slack_webhook, summary, event_date, timezone, dry_run)
 
 
 if __name__ == "__main__":
