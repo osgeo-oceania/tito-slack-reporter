@@ -85,7 +85,7 @@ def get_tito_activities(
     summary = {
         "Workshops": 0,
     }
-    non_workshop_names = set()
+    workshop_activity_names = set()
     for activity in activities["activities"]:
         if activity["name"] in NON_WORKSHOP_ACTIVITIES:
             if activity["name"] in GROUPED:
@@ -96,11 +96,12 @@ def get_tito_activities(
                     summary[grouped_name] = activity["allocation_count"]
             else:
                 summary[activity["name"]] = activity["allocation_count"]
-                non_workshop_names.add(activity["name"])
+
         else:
             summary["Workshops"] += activity["allocation_count"]
+            workshop_activity_names.add(activity["name"])
 
-    print('Non-workshop activities found:', ', '.join(sorted(non_workshop_names)))
+    print('Non-workshop activities found:', ', '.join(sorted(workshop_activity_names)))
 
     return summary
 
