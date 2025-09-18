@@ -24,6 +24,13 @@ NON_WORKSHOP_ACTIVITIES = (
     "B2B",
 )
 
+GROUPED = {
+    "Conference Day 1": "Conference and Icebreaker",
+    "Conference Day 2": "Conference and Icebreaker",
+    "Conference Day 3": "Conference and Icebreaker",
+    "Icebreaker": "Conference and Icebreaker",
+}
+
 
 def get_tito_tickets(
     tito_key: str, account: str, event: str
@@ -78,11 +85,22 @@ def get_tito_activities(
     summary = {
         "Workshops": 0,
     }
+    non_workshop_names = set()
     for activity in activities["activities"]:
         if activity["name"] in NON_WORKSHOP_ACTIVITIES:
-            summary[activity["name"]] = activity["allocation_count"]
+            if activity["name"] in GROUPED:
+                grouped_name = GROUPED[activity["name"]]
+                if grouped_name in summary:
+                    summary[grouped_name] += activity["allocation_count"]
+                else:
+                    summary[grouped_name] = activity["allocation_count"]
+            else:
+                summary[activity["name"]] = activity["allocation_count"]
+                non_workshop_names.add(activity["name"])
         else:
             summary["Workshops"] += activity["allocation_count"]
+
+    print('Non-workshop activities found:', ', '.join(sorted(non_workshop_names)))
 
     return summary
 
