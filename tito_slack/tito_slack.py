@@ -91,7 +91,13 @@ def get_tito_activities(
             if activity["name"] in GROUPED:
                 grouped_name = GROUPED[activity["name"]]
                 if grouped_name in summary:
-                    summary[grouped_name] += activity["allocation_count"]
+                    # We don't want to sum things, just record the value once
+                    # But log the old value
+                    print(
+                        f"Warning: {grouped_name} already in summary with value {summary[grouped_name]}, overwriting with {activity['allocation_count']}"
+                    )
+                    summary[grouped_name] = activity["allocation_count"]
+
                 else:
                     summary[grouped_name] = activity["allocation_count"]
             else:
@@ -101,13 +107,17 @@ def get_tito_activities(
             summary["Workshops"] += activity["allocation_count"]
             workshop_activity_names.add(activity["name"])
 
-    print('Non-workshop activities found:', ', '.join(sorted(workshop_activity_names)))
+    print("Non-workshop activities found:", ", ".join(sorted(workshop_activity_names)))
 
     return summary
 
 
 def post_to_slack(
-    webhook: str, summary: dict, event_date: datetime, timezone: str, dry_run: bool=False
+    webhook: str,
+    summary: dict,
+    event_date: datetime,
+    timezone: str,
+    dry_run: bool = False,
 ) -> None:
     """
     Post a message to Slack
@@ -127,10 +137,7 @@ def post_to_slack(
         "here's the latest registration numbers:\n"
     )
     message += "\n".join(
-        [
-            f"\t• {ticket_type}: {quantity}"
-            for ticket_type, quantity in summary.items()
-        ]
+        [f"\t• {ticket_type}: {quantity}" for ticket_type, quantity in summary.items()]
     )
     payload = {
         "blocks": [
@@ -183,7 +190,7 @@ def cli(account, event, event_date, summary_type, dry_run):
 
     if summary_type not in ["registrations", "activities"]:
         raise ValueError("Invalid summary type")
-    
+
     if summary_type == "registrations":
         regos = get_tito_tickets(TITO_KEY, account, event)
 
@@ -196,7 +203,6 @@ def cli(account, event, event_date, summary_type, dry_run):
 
         if summary is None:
             raise ValueError("No activities returned")
-
 
     post_to_slack(slack_webhook, summary, event_date, timezone, dry_run)
 
