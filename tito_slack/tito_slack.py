@@ -21,7 +21,7 @@ NON_WORKSHOP_ACTIVITIES = (
     "Icebreaker",
     "T-Shirt",
     "Women in Geospatial Breakfast",
-    "B2B",
+    "Business to Business",
 )
 
 GROUPED = {
