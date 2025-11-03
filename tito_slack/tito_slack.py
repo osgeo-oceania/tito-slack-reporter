@@ -24,6 +24,7 @@ NON_WORKSHOP_ACTIVITIES = (
     "Business to Business",
     "TGP Breakfast",
     "Auckland Transport HOP card",
+    "Conference and Icebreaker"
 )
 
 GROUPED = {
